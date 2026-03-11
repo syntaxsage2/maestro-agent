@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent 智能助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #14b8a6;
+            --accent-light: #2dd4bf;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --user-bubble: #3b82f6;
+            --ai-bubble: #334155;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary), #020617);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1600px;
+            height: 97vh;
+            margin: 1.5vh auto;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 左侧边栏样式 */
+        .sidebar {
+            width: 300px;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(148, 163, 184, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .logo-icon i {
+            font-size: 22px;
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-light), #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent);
+        }
+
+        .status {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            border: 2px solid var(--secondary);
+        }
+
+        .agent-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .agent-info h2 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .agent-info p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 10px;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: rgba(148, 163, 184, 0.1);
+        }
+
+        .history-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .history-item i {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .feature-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+        .feature-card i {
+            font-size: 20px;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .feature-card h3 {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* 主聊天区域样式 */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            display: flex;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .chat-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .chat-status {
+            margin-left: 15px;
+            background: rgba(20, 184, 166, 0.2);
+            color: var(--accent-light);
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 25px 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 80%;
+            display: flex;
+            gap: 15px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .message-avatar {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .message-content {
+            padding: 15px 20px;
+            border-radius: 18px;
+            position: relative;
+            line-height: 1.5;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .user .message-content {
+            background: var(--user-bubble);
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai .message-content {
+            background: var(--ai-bubble);
+            border-bottom-left-radius: 5px;
+        }
+
+        .user {
+            align-self: flex-end;
+        }
+
+        .user .message-content {
+            background: linear-gradient(to right, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .ai .message-content {
+            background: var(--ai-bubble);
+            color: var(--text-primary);
+        }
+
+        .message-info {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .message-info i {
+            margin-left: 15px;
+            cursor: pointer;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .dots {
+            display: flex;
+            margin-left: 8px;
+        }
+
+        .dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: bounce 1.3s infinite;
+        }
+
+        .dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        /* 输入区域样式 */
+        .input-container {
+            padding: 20px 30px;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 25px;
+            padding: 10px 20px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            transition: border 0.3s;
+        }
+
+        .input-area:focus-within {
+            border-color: var(--accent);
+        }
+
+        .input-area i {
+            color: var(--text-secondary);
+            font-size: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .input-area input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            padding: 8px 0;
+            outline: none;
+        }
+
+        .input-area button {
+            background: var(--accent);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .input-area button:hover {
+            background: var(--accent-light);
+            transform: rotate(20deg);
+        }
+
+        .input-tools {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .tools-left {
+            display: flex;
+            gap: 25px;
+        }
+
+        .tool-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .tool-item:hover {
+            color: var(--accent-light);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 250px;
+            }
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: 100vh;
+                margin: 0;
+                border-radius: 0;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+                padding: 15px;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .logo {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
+                width: 100%;
+            }
+            .agent-info {
+                display: none;
+            }
+            .section {
+                margin: 10px;
+                flex: 1;
+            }
+            .section-title {
+                display: none;
+            }
+            .history-list {
+                display: flex;
+                gap: 5px;
+            }
+            .history-item {
+                padding: 8px 10px;
+                margin-bottom: 0;
+            }
+            .history-item span {
+                display: none;
+            }
+            .features-grid {
+                display: none;
+            }
+            .chat-header {
+                padding: 15px;
+            }
+            .chat-messages {
+                padding: 15px;
+            }
+            .input-container {
+                padding: 15px;
+            }
+            .tool-item span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h1>AI Agent</h1>
+            </div>
+
+            <div class="agent-info">
+                <div class="avatar">
+                    <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&q=80" alt="AI Assistant">
+                    <div class="status"></div>
+                </div>
+                <h2>智能助手</h2>
+                <p>版本 2.1.5 · 在线</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-history"></i>
+                    历史对话
+                </div>
+                <ul class="history-list">
+                    <li class="history-item active">
+                        <i class="fas fa-comment"></i>
+                        <span>今日对话</span>
+                    </li>
+                    <li class="history-item">
+                        <i class="fas fa-file-alt"></i>
+                        <span>项目需求分析</span>
+                    </li>
+                    <li class="history-item">
+                        <i class="fas fa-code"></i>
+                        <span>代码优化建议</span>
+                    </li>
+                    <li class="history-item">
+                        <i class="fas fa-book"></i>
+                        <span>学习计划制定</span>
+                    </li>
+                    <li class="history-item">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>创意构思</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-plug"></i>
+                    功能模块
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-code"></i>
+                        <h3>代码生成</h3>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-search"></i>
+                        <h3>网页搜索</h3>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>文档分析</h3>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>数据分析</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主聊天区域 -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>智能助手</h2>
+                <div class="chat-status">在线 · 响应迅速</div>
+            </div>
+
+            <div class="chat-messages">
+                <!-- 收到的消息 -->
+                <div class="message ai">
+                    <div class="message-avatar">
+                        <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&q=80" alt="AI">
+                    </div>
+                    <div class="message-content">
+                        您好！我是您的AI助手。有什么可以帮您的吗？我能回答问题、生成内容、分析数据等。请随时告诉我您的需求。
+                        <div class="message-info">
+                            <span>智能助手 · 刚刚</span>
+                            <i class="fas fa-copy" title="复制"></i>
+                            <i class="fas fa-thumbs-up" title="赞"></i>
+                            <i class="fas fa-thumbs-down" title="踩"></i>
+                        </div>
+                        
+                        <div class="message-actions">
+                            <button class="action-btn"><i class="fas fa-bolt"></i> 生成代码</button>
+                            <button class="action-btn"><i class="fas fa-search"></i> 联网搜索</button>
+                            <button class="action-btn"><i class="fas fa-edit"></i> 改写优化</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 发送的消息 -->
+                <div class="message user">
+                    <div class="message-content">
+                        请帮我创建一个精美的Chat网页用于AI Agent，采用现代化设计，深色主题，包含聊天历史、功能菜单等元素。
+                        <div class="message-info">
+                            <span>我 · 1分钟前</span>
+                        </div>
+                    </div>
+                    <div class="message-avatar">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&q=80" alt="User">
+                    </div>
+                </div>
+
+                <!-- 收到的消息 -->
+                <div class="message ai">
+                    <div class="message-avatar">
+                        <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&q=80" alt="AI">
+                    </div>
+                    <div class="message-content">
+                        已为您设计精美的AI Agent聊天界面，包含以下功能：
+                        <br><br>
+                        ✅ 深色主题搭配霓虹蓝绿色调<br>
+                        ✅ 左侧功能区（AI信息、历史会话）<br>
+                        ✅ 中央聊天区域（消息气泡）<br>
+                        ✅ 底部输入区域<br>
+                        ✅ 响应式设计适配不同设备<br>
+                        ✅ 动画效果增强用户体验<br><br>
+                        
+                        您可以根据需要进一步调整颜色、布局或添加新功能。
+                        <div class="message-info">
+                            <span>智能助手 · 刚刚</span>
+                            <i class="fas fa-copy" title="复制"></i>
+                            <i class="fas fa-thumbs-up" title="赞"></i>
+                            <i class="fas fa-thumbs-down" title="踩"></i>
+                        </div>
+                        
+                        <div class="message-actions">
+                            <button class="action-btn"><i class="fas fa-code"></i> 查看代码</button>
+                            <button class="action-btn"><i class="fas fa-palette"></i> 更改主题</button>
+                            <button class="action-btn"><i class="fas fa-mobile-alt"></i> 响应式演示</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 正在输入指示器 -->
+                <div class="typing-indicator">
+                    <span>助手正在思考</span>
+                    <div class="dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-area">
+                    <i class="fas fa-plus-circle"></i>
+                    <input type="text" placeholder="输入消息..." id="message-input">
+                    <button id="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <div class="input-tools">
+                    <div class="tools-left">
+                        <div class="tool-item">
+                            <i class="fas fa-file-upload"></i>
+                            <span>上传文件</span>
+                        </div>
+                        <div class="tool-item">
+                            <i class="fas fa-image"></i>
+                            <span>添加图片</span>
+                        </div>
+                        <div class="tool-item">
+                            <i class="fas fa-microphone"></i>
+                            <span>语音输入</span>
+                        </div>
+                    </div>
+                    <div class="tool-item">
+                        <i class="fas fa-magic"></i>
+                        <span>AI 提示</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的聊天功能实现
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageInput = document.getElementById('message-input');
+            const sendBtn = document.getElementById('send-btn');
+            const chatMessages = document.querySelector('.chat-messages');
+            
+            // 滚动到最新消息
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // 添加新消息
+            function addMessage(content, isUser) {
+                const messageContainer = document.createElement('div');
+                messageContainer.className = `message ${isUser ? 'user' : 'ai'}`;
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                
+                const avatarImg = document.createElement('img');
+                avatarImg.src = isUser ? 
+                    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&q=80' : 
+                    'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&q=80';
+                avatarImg.alt = isUser ? 'User' : 'AI';
+                
+                avatar.appendChild(avatarImg);
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+                
+                const messageInfo = document.createElement('div');
+                messageInfo.className = 'message-info';
+                messageInfo.innerHTML = `<span>${isUser ? '我' : '智能助手'} · 刚刚</span>`;
+                
+                messageContent.appendChild(messageInfo);
+                
+                if (isUser) {
+                    messageContainer.appendChild(messageContent);
+                    messageContainer.appendChild(avatar);
+                } else {
+                    messageContainer.appendChild(avatar);
+                    messageContainer.appendChild(messageContent);
+                }
+                
+                // 添加动画效果
+                messageContainer.style.opacity = '0';
+                messageContainer.style.transform = 'translateY(10px)';
+                
+                chatMessages.appendChild(messageContainer);
+                
+                // 触发动画
+                setTimeout(() => {
+                    messageContainer.style.transition = 'opacity 0.3s, transform 0.3s';
+                    messageContainer.style.opacity = '1';
+                    messageContainer.style.transform = 'translateY(0)';
+                }, 10);
+                
+                scrollToBottom();
+            }
+            
+            // 发送消息
+            function sendMessage() {
+                const content = messageInput.value.trim();
+                if (content) {
+                    addMessage(content, true);
+                    messageInput.value = '';
+                    
+                    // 模拟AI回复
+                    setTimeout(() => {
+                        addMessage("收到您的消息！这是一个模拟回复。在实际应用中，这里将显示AI生成的内容。", false);
+                    }, 1000);
+                }
+            }
+            
+            // 事件监听
+            sendBtn.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // 滚动到底部
+            scrollToBottom();
+        });
+    </script>
+</body>
+</html>
